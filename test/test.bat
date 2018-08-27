@@ -1,6 +1,11 @@
 @echo off
 for /f "usebackq tokens=*" %%i in (`cd`) do @set current_dir=%%i
 @cd /d %~dp0
+
+rem ビルド時にユーザー定義の環境変数を使いたい場合にはこのファイルと同じディレクトリにenvpath.batを作成し、その中で定義する。
+if exist envpath.bat (
+	call envpath.bat
+	)
 if not defined VisualStudioVersion (
 	call "C:\Program Files (x86)\Microsoft Visual Studio 14.0\VC\vcvarsall.bat" amd64
 )
