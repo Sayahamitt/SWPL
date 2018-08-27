@@ -11,7 +11,7 @@
 #include <cmath>
 #include <Eigen/Core>
 
-class wavefield{
+class Wavefield{
 	std::vector<std::complex<double>> field;//1次元配列に2次元データを行優先で充填する
 	std::vector<double> xaxis;
 	std::vector<double> yaxis;
@@ -25,7 +25,7 @@ class wavefield{
 	constexpr static std::complex<double> imunt = std::complex<double>(0,1);
 
 public:
-	wavefield(int xsize, int ysize, double gridspace, double wavelength):
+	Wavefield(int xsize, int ysize, double gridspace, double wavelength):
 	field(ysize*xsize, std::complex<double>(0)),
 	sizex(xsize),
 	sizey(ysize),
@@ -72,7 +72,7 @@ public:
 		field = RSprop(z, xaxis, yaxis).getField();
 	}
 
-	wavefield RSprop(const double z,const std::vector<double> distax_x,const std::vector<double> distax_y){
+	Wavefield RSprop(const double z,const std::vector<double> distax_x,const std::vector<double> distax_y){
 		const double dst_pitchy = distax_x[1]-distax_y[0];
 		const double dst_pitchx = distax_x[1]-distax_x[0];
 		const double ZZ = std::pow(z,2);
@@ -94,7 +94,7 @@ public:
 		e_dst_field *= (z/(imunt*wvl))*(dst_pitchy*dst_pitchx);
 
 		Eigen::Map<Eigen::Array<std::complex<double>,Eigen::Dynamic,Eigen::Dynamic,Eigen::RowMajor>>(dst_field.data(),sizey,sizex) = e_dst_field;
-		wavefield dst_wf(distax_x.size(),distax_y.size(),dst_pitchx,wvl);
+		Wavefield dst_wf(distax_x.size(),distax_y.size(),dst_pitchx,wvl);
 		dst_wf.setField(dst_field);
 
 		return dst_wf;

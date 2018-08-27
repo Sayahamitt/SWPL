@@ -31,7 +31,7 @@ int RStest(int argc, char* argv[]){
 		return 0;
 	}
 	
-	wavefield wf(xsize,ysize,pitch,wvl);
+	Wavefield wf(xsize,ysize,pitch,wvl);
 	//wf.setCircAparture(1);
 	wf.setCircAparture(aptD);
 	//wf.showWFcons();
