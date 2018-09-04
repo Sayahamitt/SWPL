@@ -11,6 +11,8 @@ if not defined VisualStudioVersion (
 )
 
 if "%1"=="performance" (
+	set exearg=256 256 0.25e-6 1e-6 50e-6 1e-3 obs.bin
+) else if "%1"=="propagation" (
 	set exearg=128 128 0.25e-6 1e-6 50e-6 1e-3 obs.bin
 ) else (
 	echo SET TEST ARGUMENT
