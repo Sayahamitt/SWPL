@@ -14,23 +14,16 @@ void offsetObsScr(Wavefield& srcwf, double propDist, double xoffset, double yoff
 	srcwf.RSprop(propDist, xaxis_dst, yaxis_dst);
 }
 
-void differntGridSpace(Wavefield& srcwf, double propDist, double gridRatio){
+void differntGridSpace(Wavefield srcwf, double propDist, double gridRatio){
 	Wavefield::FieldAxis xaxis_dst = srcwf.getXaxis();
 	Wavefield::FieldAxis yaxis_dst = srcwf.getYaxis();
-/*
-	for(std::vector<double>::iterator itr=xaxis_dst.begin();itr<xaxis_dst.end();++itr){
-		std::cout<<*itr<<", "<<std::flush;
-	}std::cout<<std::endl;
-*/
+	
 	xaxis_dst.scale(gridRatio);
 	yaxis_dst.scale(gridRatio);
-	srcwf.savevectord_bin(xaxis_dst, "xaxis_dst.bin");
-/*
-	for(std::vector<double>::iterator itr=xaxis_dst.begin();itr<xaxis_dst.end();++itr){
-		std::cout<<*itr<<", "<<std::flush;
-	}std::cout<<std::endl;
-*/
+
 	srcwf.RSprop(propDist, xaxis_dst, yaxis_dst);
+
+	srcwf.saveWfield_bin("obs.bin");
 }
 
 void differntSizeObsScr(Wavefield srcwf, double propDist, int dstsizeEx_x, int dstsizeEx_y){
@@ -74,19 +67,19 @@ int RStest(int argc, char* argv[]){
 	//wf.setCircAparture(1);
 	wf.setCircAparture(aptD);
 	//wf.showWFcons();
-	wf.saveWfield_bin("source.bin");
+	//wf.saveWfield_bin("source.bin");
 	std::chrono::system_clock::time_point start = std::chrono::system_clock::now(); 
 	try{
 		//wf.RSprop(propz);
 		//offsetObsScr(wf, propz, pitch*(xsize/2), 0);//);
-		differntGridSpace(wf, propz, 0.5);
+		differntGridSpace(wf, propz, 2);
 	}catch(std::invalid_argument errorcode){
 		std::cout<<"error. unexcepted argument."<<std::endl;
 		return 0;
 	}
 	std::chrono::system_clock::time_point end = std::chrono::system_clock::now();
 	std::chrono::system_clock::duration calcdur = end-start;
-	wf.saveWfield_bin(ofpath);
+	//wf.saveWfield_bin(ofpath);
 	std::cout<< "using eigen :" <<std::chrono::duration_cast<std::chrono::milliseconds>(calcdur).count() <<std::endl;
 
 	return 0;
