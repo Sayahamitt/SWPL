@@ -207,13 +207,18 @@ public:
 		for(int ii=0;ii<distax_y.size();ii++){
 			for(int jj=0;jj<distax_x.size();jj++){
 				r01 = (ZZ+(srcax_x-distax_x[jj]).square()+(srcax_y-distax_y[ii]).square()).sqrt();
-				m_dst_field(ii,jj) = (srcwf*((jK*r01).exp()/r01.square())).sum();
+				//m_dst_field(ii,jj) = (srcwf*((jK*r01).exp()/r01.square())).sum();
+				dst_field[dsize_y*ii+jj] = (srcwf*((jK*r01).exp()/r01.square())).sum();
 			}
 		}
 		//積分の外側の係数 z/jλ と 積分単位面積dxdy を乗算する. 入力面と観測面のピクセルサイズの比を乗算し単位面積当たりのエネルギー保存則を満たす.
-		m_dst_field *= (z/(imunt*wvl))*(distax_x.Pitch()*distax_y.Pitch())*(this->xaxis.Pitch()/distax_x.Pitch())*(this->yaxis.Pitch()/distax_y.Pitch());
-
-		Eigen::Map<Eigen::Array<std::complex<double>,Eigen::Dynamic,Eigen::Dynamic,Eigen::RowMajor>>(dst_field.data(),sizey,sizex) = m_dst_field;
+		//m_dst_field *= (z/(imunt*wvl))*(distax_x.Pitch()*distax_y.Pitch())*(this->xaxis.Pitch()/distax_x.Pitch())*(this->yaxis.Pitch()/distax_y.Pitch());
+		#pragma omp parallel for
+		for(int ii=0; ii<dst_field.size(); ii++){
+			dst_field[ii] *= (z/(imunt*wvl))*(distax_x.Pitch()*distax_y.Pitch())*(this->xaxis.Pitch()/distax_x.Pitch())*(this->yaxis.Pitch()/distax_y.Pitch());	
+		}
+		
+		//Eigen::Map<Eigen::Array<std::complex<double>,Eigen::Dynamic,Eigen::Dynamic,Eigen::RowMajor>>(dst_field.data(),sizey,sizex) = m_dst_field;
 		field.swap(dst_field);
 	}
 
