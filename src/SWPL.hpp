@@ -89,7 +89,7 @@ public:
 			for(double ii=-(size/2);this->size()<size; ii++){
 				this->push_back(ii*arg_pitch);
 			}
-		}
+		}	
 
 		void shift(double deltashift){
 			for(std::vector<double>::iterator itr=this->begin();itr<this->end();++itr){
