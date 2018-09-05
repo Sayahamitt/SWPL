@@ -103,19 +103,19 @@ public:
 			}
 		}
 		void extend_back(const size_t& num){
-			const int cap = this->capacity();
-			const double endValue = *(--(this->end()));
+			const int cap = capacity();
+			const double endValue = back();
 			if(cap<num){
-				this->reserve(cap+num);
+				reserve(cap+num);
 			}
 
 			for(size_t ii=1; ii<=num; ii++){
-				this->push_back(endValue+ii*pitch);
+				push_back(endValue+ii*pitch);
 			}
 		}
-		void extend_front(const unsigned int& num ){
-			this->extend_back(num);
-			this->shift(-num*pitch);
+		void extend_front(const size_t& num ){
+			extend_back(num);
+			shift(-int(num)*pitch);
 		}
 
 		double Pitch() const{return pitch;}
@@ -137,18 +137,10 @@ public:
 	jK(imunt*(2*SWPL_PI/wavelength)),
 	xaxis(xsize,gridspace),
 	yaxis(ysize,gridspace){
-	/*
-		//X,Y軸の生成
-		for(double ii=-(xsize/2);xaxis.size()<xsize; ii++){
-			xaxis.push_back(ii*pitchx);
-		}
-		for(long long ii=-(xsize/2);yaxis.size()<ysize; ii++){
-			yaxis.push_back(ii*pitchy);
-		}*/
 	}
 
 	//Copy Constructor
-	Wavefield(Wavefield& rhs):
+	Wavefield(const Wavefield& rhs):
 	field(rhs.field),
 	sizex(rhs.sizex),
 	sizey(rhs.sizey),
@@ -198,7 +190,7 @@ public:
 		const Eigen::ArrayXXd srcax_y = Eigen::Map<Eigen::ArrayXd>(yaxis.data(),yaxis.size()).replicate(1, sizex);
 		const Eigen::ArrayXXd srcax_x = Eigen::Map<Eigen::ArrayXd>(xaxis.data(),xaxis.size()).transpose().replicate(sizey, 1);
 
-		Eigen::ArrayXXcd m_dst_field = Eigen::ArrayXXcd::Zero(distax_y.size(),distax_x.size());
+		//Eigen::ArrayXXcd m_dst_field = Eigen::ArrayXXcd::Zero(distax_y.size(),distax_x.size());
 		Eigen::ArrayXXd r01 = Eigen::ArrayXXd::Zero(distax_y.size(),distax_x.size());
 
 		//レイリーゾンマーフェルト積分の計算
@@ -217,7 +209,6 @@ public:
 		for(int ii=0; ii<dst_field.size(); ii++){
 			dst_field[ii] *= (z/(imunt*wvl))*(distax_x.Pitch()*distax_y.Pitch())*(this->xaxis.Pitch()/distax_x.Pitch())*(this->yaxis.Pitch()/distax_y.Pitch());	
 		}
-		
 		//Eigen::Map<Eigen::Array<std::complex<double>,Eigen::Dynamic,Eigen::Dynamic,Eigen::RowMajor>>(dst_field.data(),sizey,sizex) = m_dst_field;
 		field.swap(dst_field);
 	}
