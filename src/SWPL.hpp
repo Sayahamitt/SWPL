@@ -89,7 +89,15 @@ public:
 			for(double ii=-(size/2);this->size()<size; ii++){
 				this->push_back(ii*arg_pitch);
 			}
-		}	
+		}
+
+		void swap(FieldAxis& obj){
+			double tmp_objPitch = obj.Pitch();
+			obj.pitch = pitch;
+			pitch = tmp_objPitch;
+
+			std::vector<double>::swap(obj);
+		}
 
 		void shift(double deltashift){
 			for(std::vector<double>::iterator itr=this->begin();itr<this->end();++itr){
@@ -182,7 +190,7 @@ public:
 		RSprop(z, xaxis, yaxis);
 	}
 
-	void RSprop(const double z, const FieldAxis distax_x, const FieldAxis distax_y){
+	void RSprop(const double z, const FieldAxis& distax_x, const FieldAxis& distax_y){
 		std::vector<std::complex<double>> dst_field(std::vector<std::complex<double>>(distax_x.size()*distax_y.size(),std::complex<double>(0)));
 		const double ZZ = std::pow(z,2);
 
@@ -211,6 +219,8 @@ public:
 		}
 		//Eigen::Map<Eigen::Array<std::complex<double>,Eigen::Dynamic,Eigen::Dynamic,Eigen::RowMajor>>(dst_field.data(),sizey,sizex) = m_dst_field;
 		field.swap(dst_field);
+		xaxis=distax_x;
+		yaxis=distax_y;
 	}
 
 	void RSprop_nosimd(double z){
