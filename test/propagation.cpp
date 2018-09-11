@@ -3,6 +3,7 @@
 #include <iostream>
 #include <string>
 
+//#define SWPL_UNUSE_OPENMP
 #include "../src/SWPL.hpp"
 
 void offsetObsScr(Wavefield& srcwf, double propDist, double xoffset, double yoffset){

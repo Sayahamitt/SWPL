@@ -203,7 +203,9 @@ public:
 
 		//レイリーゾンマーフェルト積分の計算
 		const int dsize_y = distax_y.size();
-		#pragma omp parallel for private(r01)
+		#ifndef SWPL_UNUSE_OPENMP
+			#pragma omp parallel for private(r01)
+		#endif
 		for(int ii=0;ii<distax_y.size();ii++){
 			for(int jj=0;jj<distax_x.size();jj++){
 				r01 = (ZZ+(srcax_x-distax_x[jj]).square()+(srcax_y-distax_y[ii]).square()).sqrt();
@@ -213,7 +215,9 @@ public:
 		}
 		//積分の外側の係数 z/jλ と 積分単位面積dxdy を乗算する. 入力面と観測面のピクセルサイズの比を乗算し単位面積当たりのエネルギー保存則を満たす.
 		//m_dst_field *= (z/(imunt*wvl))*(distax_x.Pitch()*distax_y.Pitch())*(this->xaxis.Pitch()/distax_x.Pitch())*(this->yaxis.Pitch()/distax_y.Pitch());
-		#pragma omp parallel for
+		#ifndef SWPL_UNUSE_OPENMP
+			#pragma omp parallel for
+		#endif
 		for(int ii=0; ii<dst_field.size(); ii++){
 			dst_field[ii] *= (z/(imunt*wvl))*(distax_x.Pitch()*distax_y.Pitch())*(this->xaxis.Pitch()/distax_x.Pitch())*(this->yaxis.Pitch()/distax_y.Pitch());	
 		}
@@ -228,7 +232,9 @@ public:
 		std::vector<double> distax_x = xaxis;
 		std::vector<double> distax_y = yaxis;
 
-		#pragma omp parallel for
+		#ifndef SWPL_UNUSE_OPENMP
+			#pragma omp parallel for
+		#endif
 		for(int ii=0;ii<sizey;ii++){
 			for(int jj=0;jj<sizex;jj++){
 				for(int kk=0;kk<sizey;kk++){
