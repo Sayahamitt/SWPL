@@ -90,6 +90,14 @@ public:
 				this->push_back(ii*arg_pitch);
 			}
 		}
+		FieldAxis(double lower, double upper, double arg_pitch):
+		std::vector<double>(),
+		pitch(arg_pitch){
+			//軸の生成
+			for(double value=lower;value<=upper; value+=arg_pitch){
+				push_back(value);
+			}
+		}
 
 		void swap(FieldAxis& obj){
 			double tmp_objPitch = obj.Pitch();
