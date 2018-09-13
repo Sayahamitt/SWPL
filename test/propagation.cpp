@@ -37,6 +37,23 @@ void differntSizeObsScr(Wavefield& srcwf, double propDist, int dstsizeEx_x, int 
 	srcwf.RSprop(propDist, xaxis_dst, yaxis_dst);
 }
 
+void differntAxis(Wavefield& srcwf, double propDist){
+	double xf = srcwf.getXaxis().front()/2;
+	double xb = srcwf.getXaxis().back()/2;
+	double yf = srcwf.getYaxis().front()/1;
+	double yb = srcwf.getYaxis().back()/1;
+
+	Wavefield::FieldAxis xaxis_dst(xf,xb,srcwf.getXaxis().Pitch());
+	//Wavefield::FieldAxis xaxis_dst = srcwf.getXaxis();
+	Wavefield::FieldAxis yaxis_dst(yf,yb,srcwf.getYaxis().Pitch());
+	//Wavefield::FieldAxis yaxis_dst = srcwf.getYaxis();
+	try{
+		srcwf.RSprop(propDist, xaxis_dst, yaxis_dst);
+	}catch(const std::exception& e) {
+		std::cerr << e.what() << std::endl;
+	}
+}
+
 int RStest(int argc, char* argv[]){
 	int xsize = 0;
 	int ysize = 0;
@@ -61,6 +78,8 @@ int RStest(int argc, char* argv[]){
 	}catch(std::invalid_argument errorcode){
 		std::cout<<"error. unexcepted argument."<<std::endl;
 		return 0;
+	}catch(...){
+		std::cout<<"error in argument parsing"<<std::endl;
 	}
 	
 	Wavefield wf(xsize,ysize,pitch,wvl);
@@ -73,16 +92,18 @@ int RStest(int argc, char* argv[]){
 		//wf.RSprop(propz);
 		//offsetObsScr(wf, propz, pitch*(xsize/2), 0);//);
 		//differntGridSpace(wf, propz, 4);
-		differntSizeObsScr(wf, propz, 128, 128);
+		//differntSizeObsScr(wf, propz, 128, 128);
+		differntAxis(wf,propz);
 	}catch(std::invalid_argument errorcode){
 		std::cout<<"error. unexcepted argument."<<std::endl;
 		return 0;
+	}catch(...){
+		std::cout<<"something error in calling"<<std::endl;
 	}
 	std::chrono::system_clock::time_point end = std::chrono::system_clock::now();
 	std::chrono::system_clock::duration calcdur = end-start;
 	wf.saveWfield_bin(ofpath);
 	std::cout<< "using eigen :" <<std::chrono::duration_cast<std::chrono::milliseconds>(calcdur).count() <<std::endl;
-
 	return 0;
 }
 

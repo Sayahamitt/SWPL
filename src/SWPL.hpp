@@ -96,6 +96,17 @@ public:
 			//軸の生成
 			for(double value=lower;value<=upper; value+=arg_pitch){
 				push_back(value);
+				if(value==upper){
+					std::cout<<"end!!"<<std::endl;
+				}
+			}
+		}
+		FieldAxis(double lower, double arg_pitch, int size):
+		std::vector<double>(),
+		pitch(arg_pitch){
+			//軸の生成
+			for(double ii=0; ii<size; ii++){
+				push_back(lower+ii*arg_pitch);
 			}
 		}
 
@@ -199,37 +210,38 @@ public:
 	}
 
 	void RSprop(const double z, const FieldAxis& distax_x, const FieldAxis& distax_y){
-		std::vector<std::complex<double>> dst_field(std::vector<std::complex<double>>(distax_x.size()*distax_y.size(),std::complex<double>(0)));
+		std::vector<std::complex<double>> dst_field(distax_x.size()*distax_y.size(),std::complex<double>(0));
 		const double ZZ = std::pow(z,2);
 
 		const Eigen::ArrayXXcd srcwf = Eigen::Map<Eigen::ArrayXXcd>(field.data(),sizey,sizex);
 		const Eigen::ArrayXXd srcax_y = Eigen::Map<Eigen::ArrayXd>(yaxis.data(),yaxis.size()).replicate(1, sizex);
 		const Eigen::ArrayXXd srcax_x = Eigen::Map<Eigen::ArrayXd>(xaxis.data(),xaxis.size()).transpose().replicate(sizey, 1);
 
-		//Eigen::ArrayXXcd m_dst_field = Eigen::ArrayXXcd::Zero(distax_y.size(),distax_x.size());
+		Eigen::ArrayXXcd m_dst_field = Eigen::ArrayXXcd::Zero(distax_y.size(),distax_x.size());
 		Eigen::ArrayXXd r01 = Eigen::ArrayXXd::Zero(distax_y.size(),distax_x.size());
 
 		//レイリーゾンマーフェルト積分の計算
+		const int dsize_x = distax_x.size();
 		const int dsize_y = distax_y.size();
 		#ifndef SWPL_UNUSE_OPENMP
 			#pragma omp parallel for private(r01)
 		#endif
-		for(int ii=0;ii<distax_y.size();ii++){
-			for(int jj=0;jj<distax_x.size();jj++){
+		for(int ii=0;ii<dsize_y;ii++){
+			for(int jj=0;jj<dsize_x;jj++){
 				r01 = (ZZ+(srcax_x-distax_x[jj]).square()+(srcax_y-distax_y[ii]).square()).sqrt();
-				//m_dst_field(ii,jj) = (srcwf*((jK*r01).exp()/r01.square())).sum();
-				dst_field[dsize_y*ii+jj] = (srcwf*((jK*r01).exp()/r01.square())).sum();
+				m_dst_field(ii,jj) = (srcwf*((jK*r01).exp()/r01.square())).sum();
+				//dst_field[dsize_x*ii+jj] = (srcwf*((jK*r01).exp()/r01.square())).sum();
 			}
 		}
 		//積分の外側の係数 z/jλ と 積分単位面積dxdy を乗算する. 入力面と観測面のピクセルサイズの比を乗算し単位面積当たりのエネルギー保存則を満たす.
-		//m_dst_field *= (z/(imunt*wvl))*(distax_x.Pitch()*distax_y.Pitch())*(this->xaxis.Pitch()/distax_x.Pitch())*(this->yaxis.Pitch()/distax_y.Pitch());
+		m_dst_field *= (z/(imunt*wvl))*(distax_x.Pitch()*distax_y.Pitch())*(this->xaxis.Pitch()/distax_x.Pitch())*(this->yaxis.Pitch()/distax_y.Pitch());
 		#ifndef SWPL_UNUSE_OPENMP
 			#pragma omp parallel for
 		#endif
 		for(int ii=0; ii<dst_field.size(); ii++){
 			dst_field[ii] *= (z/(imunt*wvl))*(distax_x.Pitch()*distax_y.Pitch())*(this->xaxis.Pitch()/distax_x.Pitch())*(this->yaxis.Pitch()/distax_y.Pitch());	
 		}
-		//Eigen::Map<Eigen::Array<std::complex<double>,Eigen::Dynamic,Eigen::Dynamic,Eigen::RowMajor>>(dst_field.data(),sizey,sizex) = m_dst_field;
+		Eigen::Map<Eigen::Array<std::complex<double>,Eigen::Dynamic,Eigen::Dynamic,Eigen::RowMajor>>(dst_field.data(),dsize_y,dsize_x) = m_dst_field;
 		field.swap(dst_field);
 		xaxis=distax_x;
 		yaxis=distax_y;
@@ -273,6 +285,18 @@ public:
 		std::ofstream fout;
 		fout.open(path.c_str(), std::ios::out|std::ios::binary|std::ios::trunc);
 		std::for_each(field.begin(),field.end(),[&fout](std::complex<double> num){
+				double r = std::real(num);
+				double i = std::imag(num);
+				fout.write((char *) &r,sizeof( double ) );
+				fout.write((char *) &i,sizeof( double ) );
+			});
+		fout.close();
+	}
+
+	void saveCompDouble_bin(std::vector<std::complex<double>> vec,std::string path){
+		std::ofstream fout;
+		fout.open(path.c_str(), std::ios::out|std::ios::binary|std::ios::trunc);
+		std::for_each(vec.begin(),vec.end(),[&fout](std::complex<double> num){
 				double r = std::real(num);
 				double i = std::imag(num);
 				fout.write((char *) &r,sizeof( double ) );

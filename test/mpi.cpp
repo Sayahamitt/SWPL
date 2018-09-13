@@ -6,6 +6,46 @@
 
 #include "../src/SWPL.hpp"
 
+void mpitest(Wavefield src,const Wavefield::FieldAxis& dst_xaxis,const Wavefield::FieldAxis& dst_yaxis, double propz){
+	const double xaxisPitch = dst_xaxis.Pitch();
+	const double xaxisFirst = dst_xaxis.front();
+	const double xaxisEnd = dst_xaxis.back();
+	const size_t xaxisNum = dst_xaxis.size();
+	const double yaxisPitch = dst_yaxis.Pitch();
+	const double yaxisFirst = dst_yaxis.front();
+	const double yaxisEnd = dst_yaxis.back();
+	const size_t yaxisNum = dst_yaxis.size();
+	
+	int mpi_procRank;
+	int mpi_commSize;
+	MPI_Comm_size(MPI_COMM_WORLD, &mpi_commSize);
+	MPI_Comm_rank(MPI_COMM_WORLD, &mpi_procRank);
+
+	//自スレッドの担当範囲を決める
+	//二次元の行列で定義される計算範囲をY軸についてのみ分割する
+	//分割数で行数を割った余りの分の計算量をさらに各スレッドで1行分ずつ分担する
+	int quotient = dst_yaxis.size()/mpi_commSize;//C++でint型の割り算は切り捨て
+	int modulo = dst_yaxis.size()%mpi_commSize;
+	bool isModZero = (modulo==0 ? true : false);
+	int startPos = quotient*mpi_procRank;
+	int endPos = quotient*(mpi_procRank+1)-1;
+	if(modulo-mpi_procRank > 0){
+		startPos += mpi_procRank;
+		endPos += mpi_procRank+1;
+	}else if(isModZero==false){
+		startPos += modulo;
+		endPos = startPos+quotient-1;
+	}
+
+	//Wavefield::FieldAxis thAxis(dst_yaxis[startPos],dst_yaxis[endPos],dst_yaxis.Pitch());
+	Wavefield::FieldAxis thAxis(dst_yaxis[startPos],dst_yaxis.Pitch(),endPos-startPos+1);
+	//std::cout<< "quotient: "<< quotient<< ", modulo: "<<modulo<< ", ThID:  " << mpi_procRank << ", srcStart: "<< dst_yaxis[startPos] << ", srcEnd: "<< dst_yaxis[endPos] << ", Num: "<< thAxis.size()<< std::endl;
+	//std::cout<< "quotient: "<< quotient<< ", modulo: "<<modulo<< ", ThID:  " << mpi_procRank << ", Start: "<< thAxis.front() << ", End: "<< thAxis.back() << ", Num: "<< thAxis.size()<< std::endl;
+	//std::cout<< "quotient: "<< quotient<< ", modulo: "<<modulo<< ", ThID:  " << mpi_procRank << ", StartPos: "<< startPos << ", endPos: "<< endPos << ", Num: "<< endPos-startPos+1<< std::endl;
+	src.RSprop(propz, dst_xaxis, thAxis);
+	src.saveWfield_bin(std::to_string(mpi_procRank)+std::string("th_obs.bin"));
+}
+
 int main(int argc, char* argv[]){
 	int xsize = 0;
 	int ysize = 0;
@@ -16,21 +56,6 @@ int main(int argc, char* argv[]){
 	std::string ofpath;
 
 	if(argc != 8){
-
-		MPI_Init(&argc, &argv);
-
-	   int rank;
-	   MPI_Comm_rank(MPI_COMM_WORLD, &rank);
-
-	   std::cout << "Hello world from " << rank << "-th process" << std::endl;
-
-	   MPI_Barrier(MPI_COMM_WORLD);
-	   if (rank == 0) {
-	       std::cout << "Press enter to close" << std::endl;
-	       std::cin.ignore(10000, '\n');
-	   }
-
-	   	MPI_Finalize();
 		return 0;
 	}
 	try{
@@ -41,31 +66,39 @@ int main(int argc, char* argv[]){
 		aptD = std::stod(std::string(argv[5]));
 		propz = std::stod(std::string(argv[6]));
 		ofpath = std::string(argv[7]);
-		std::cout<<ofpath<<std::endl;
 	}catch(std::invalid_argument errorcode){
 		std::cout<<"error. unexcepted argument."<<std::endl;
 		return 0;
+	}
+
+	//int mpi_argc=0;char*** mpi_argv;
+	MPI_Init(&argc,&argv);
+	int mpi_procRank;
+	MPI_Comm_rank(MPI_COMM_WORLD, &mpi_procRank);
+
+	Wavefield wf(xsize,ysize,pitch,wvl);
+	wf.setCircAparture(aptD);
+	std::chrono::system_clock::time_point start;
+	if(mpi_procRank==0){
+		start = std::chrono::system_clock::now(); 
 	}
 	
-	Wavefield wf(xsize,ysize,pitch,wvl);
-	//wf.setCircAparture(1);
-	wf.setCircAparture(aptD);
-	//wf.showWFcons();
-	//wf.saveWfield_bin("source.bin");
-	std::chrono::system_clock::time_point start = std::chrono::system_clock::now(); 
 	try{
-		//wf.RSprop(propz);
-		//offsetObsScr(wf, propz, pitch*(xsize/2), 0);//);
-		//differntGridSpace(wf, propz, 4);
-		//differntSizeObsScr(wf, propz, 128, 128);
+		mpitest(wf,wf.getXaxis(),wf.getYaxis(),propz);
+		MPI_Barrier(MPI_COMM_WORLD);
 	}catch(std::invalid_argument errorcode){
 		std::cout<<"error. unexcepted argument."<<std::endl;
 		return 0;
 	}
-	std::chrono::system_clock::time_point end = std::chrono::system_clock::now();
-	std::chrono::system_clock::duration calcdur = end-start;
-	wf.saveWfield_bin(ofpath);
-	std::cout<< "using eigen :" <<std::chrono::duration_cast<std::chrono::milliseconds>(calcdur).count() <<std::endl;
 
+	if(mpi_procRank==0){
+		std::chrono::system_clock::time_point end = std::chrono::system_clock::now();
+		std::chrono::system_clock::duration calcdur = end-start;
+		std::cout<< "using eigen :" <<std::chrono::duration_cast<std::chrono::milliseconds>(calcdur).count() <<std::endl;
+	}
+	
+	
+
+	MPI_Finalize();
 	return 0;
 }
