@@ -23,8 +23,8 @@ class Wavefield{
 	double wvl;
 	double wvnum;
 	std::complex<double> jK;
-	constexpr static std::complex<double> imunt = std::complex<double>(0,1);
-public:
+	static const std::complex<double> imunt;
+public:/*
 	class FieldParamater{
 		unsigned int sizex;
 		unsigned int sizey;
@@ -43,14 +43,14 @@ public:
 		pitchy(arg_pitchy),
 		wvl(arg_wvl),
 		wvnum(2*SWPL_PI/arg_wvl),
-		jK(imunt*(2*SWPL_PI/arg_wvl)){/*
+		jK(imunt*(2*SWPL_PI/arg_wvl)){
 			//X,Y軸の生成
 			for(double ii=-(sizex/2);xaxis.size()<sizex; ii++){
 				xaxis.push_back(ii*pitchx);
 			}
 			for(long long ii=-(sizey/2);yaxis.size()<sizey; ii++){
 				yaxis.push_back(ii*pitchy);
-			}*/
+			}
 		}
 
 		unsigned int SizeX() const{
@@ -70,14 +70,14 @@ public:
 		}
 		double WaveNumber() const{
 			return wvnum;
-		}/*
+		}
 		const std::vector<double> AxisX(){
 			return xaxis;
 		}
 		const std::vector<double> AxisY(){
 			return yaxis;
-		}*/
-	};
+		}
+	};*/
 
 	class FieldAxis:public std::vector<double>{
 		double pitch;
@@ -316,3 +316,6 @@ public:
 		fout.close();
 	}
 };
+
+//static const メンバの初期化
+const std::complex<double> Wavefield::imunt = std::complex<double>(0,1);
