@@ -6,7 +6,7 @@
 
 #include "../src/SWPL.hpp"
 
-void mpitest(Wavefield src,const Wavefield::FieldAxis& dst_xaxis,const Wavefield::FieldAxis& dst_yaxis, double propz){
+void mpitest(Wavefield& src,const Wavefield::FieldAxis& dst_xaxis,const Wavefield::FieldAxis& dst_yaxis, double propz){
 	const double xaxisPitch = dst_xaxis.Pitch();
 	const double xaxisFirst = dst_xaxis.front();
 	const double xaxisEnd = dst_xaxis.back();
@@ -43,7 +43,9 @@ void mpitest(Wavefield src,const Wavefield::FieldAxis& dst_xaxis,const Wavefield
 	//std::cout<< "quotient: "<< quotient<< ", modulo: "<<modulo<< ", ThID:  " << mpi_procRank << ", Start: "<< thAxis.front() << ", End: "<< thAxis.back() << ", Num: "<< thAxis.size()<< std::endl;
 	//std::cout<< "quotient: "<< quotient<< ", modulo: "<<modulo<< ", ThID:  " << mpi_procRank << ", StartPos: "<< startPos << ", endPos: "<< endPos << ", Num: "<< endPos-startPos+1<< std::endl;
 	src.RSprop(propz, dst_xaxis, thAxis);
-	src.saveWfield_bin(std::to_string(mpi_procRank)+std::string("th_obs.bin"));
+
+	// std::string foutpath = std::to_string(mpi_procRank)+std::string("th_obs.bin");
+	//src.saveWfield_bin(foutpath);
 }
 
 int main(int argc, char* argv[]){
@@ -54,6 +56,7 @@ int main(int argc, char* argv[]){
 	double aptD = 0;
 	double propz = 0;
 	std::string ofpath;
+	bool unifiedFileOut = false;
 
 	if(argc != 8){
 		return 0;
@@ -74,6 +77,8 @@ int main(int argc, char* argv[]){
 	//int mpi_argc=0;char*** mpi_argv;
 	MPI_Init(&argc,&argv);
 	int mpi_procRank;
+	int mpi_commSize;
+	MPI_Comm_size(MPI_COMM_WORLD, &mpi_commSize);
 	MPI_Comm_rank(MPI_COMM_WORLD, &mpi_procRank);
 
 	Wavefield wf(xsize,ysize,pitch,wvl);
@@ -96,9 +101,35 @@ int main(int argc, char* argv[]){
 		std::chrono::system_clock::duration calcdur = end-start;
 		std::cout<< "using eigen :" <<std::chrono::duration_cast<std::chrono::milliseconds>(calcdur).count() <<std::endl;
 	}
-	
-	
 
+	//ファイル出力
+	if(unifiedFileOut){
+		std::string foutpath = ofpath+std::string("th_obs.bin");
+		std::vector<std::complex<double>> wfvec = wf.getField();
+		std::ofstream fout;
+		if(mpi_procRank==0){
+			fout.open(foutpath.c_str(), std::ios::out|std::ios::binary|std::ios::trunc);
+			fout.close();
+		}
+		for(int ii=0;ii<mpi_commSize;ii++){
+			MPI_Barrier(MPI_COMM_WORLD);
+			if (mpi_procRank != ii){
+				continue;
+			}
+			
+			fout.open(foutpath.c_str(), std::ios::out|std::ios::binary|std::ios::app);
+			std::for_each(wfvec.begin(),wfvec.end(),[&fout](std::complex<double> num){
+					double r = std::real(num);
+					double i = std::imag(num);
+					fout.write((char *) &r,sizeof( double ) );
+					fout.write((char *) &i,sizeof( double ) );
+				});
+			fout.close();
+		}
+	}else{
+		std::string foutpath = std::to_string(mpi_procRank)+std::string("th_obs.bin");
+		wf.saveWfield_bin(foutpath);
+	}
 	MPI_Finalize();
 	return 0;
 }
