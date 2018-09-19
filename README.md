@@ -12,12 +12,17 @@ SWPLはスカラー波動光学による光波伝搬を計算するC++クラス�
 ### ビルド
 - VisualStudio
 ```
-cl /EHsc /arch:AVX2 /O2 /Oi /openmp /I <Eigenへのインクルードパス> /source-charset:utf-8 <ソースファイル>
+cl /EHsc /arch:AVX2 /O2 /Oi /openmp /I<Eigenへのインクルードパス> /source-charset:utf-8 <ソースファイル>
+```
+
+- g++
+```
+g++ -std=c++11 -O2 -mavx2 -fopenmp -I<Eigenへのインクルードパス>
 ```
 
 - Intel Compiler
 ```
-icpc -std=c++11 -O2 -xcore-avx2 -openmp -I <Eigenへのインクルードパス> <ソースファイル>
+icpc -std=c++11 -O2 -xcore-avx2 -openmp -I<Eigenへのインクルードパス> <ソースファイル>
 ```
 
 ### テスト
