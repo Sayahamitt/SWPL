@@ -20,7 +20,11 @@ if "%1"=="performance" (
 ) else if "%1"=="mpi" (
 	set clargs=%clargs% /I "%MSMPI_INC:~0,-1%" /I "%MSMPI_INC%\x64" /link /LIBPATH:"%MSMPI_LIB64%" msmpi.lib
 	set execmd=mpiexec -n 4 %1.exe
-	set exearg=256 256 0.25e-6 1e-6 10e-6 100e-6 obs.bin
+	set exearg=256 256 0.25e-6 1e-6 10e-6 100e-6 0
+) else if "%1"=="BeamSaber" (
+	set clargs=%clargs% /I "%MSMPI_INC:~0,-1%" /I "%MSMPI_INC%\x64" /link /LIBPATH:"%MSMPI_LIB64%" msmpi.lib
+	set execmd=mpiexec -n 1 %1.exe
+	set exearg=256 0.25e-6 1e-6 30e-6 1e-3 0.25e-6 0
 ) else (
 	echo SET TEST ARGUMENT
 	@cd /d %current_dir%
