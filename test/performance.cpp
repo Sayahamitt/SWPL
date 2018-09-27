@@ -32,11 +32,9 @@ int RStest(int argc, char* argv[]){
 		return 0;
 	}
 	
-	Wavefield wf(xsize,ysize,pitch,wvl);
-	//wf.setCircAparture(1);
+	SWPL::Wavefield wf(xsize,ysize,pitch,wvl);
 	wf.setCircAparture(aptD);
-	//wf.showWFcons();
-	wf.saveWfield_bin("source.bin");
+	SWPL::binWriteVCD(wf.getField(), "source.bin");
 	std::chrono::system_clock::time_point start = std::chrono::system_clock::now(); 
 	try{
 		wf.RSprop(propz);
@@ -46,7 +44,7 @@ int RStest(int argc, char* argv[]){
 	}
 	std::chrono::system_clock::time_point end = std::chrono::system_clock::now();
 	std::chrono::system_clock::duration calcdur = end-start;
-	wf.saveWfield_bin(ofpath);
+	SWPL::binWriteVCD(wf.getField(), ofpath);
 	std::cout<< "using eigen :" <<std::chrono::duration_cast<std::chrono::milliseconds>(calcdur).count() <<std::endl;
 
 	wf.setCircAparture(aptD);

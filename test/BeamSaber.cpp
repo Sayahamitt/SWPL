@@ -7,7 +7,7 @@
 #include <Eigen/Core>
 #include "../src/SWPL.hpp"
 
-std::vector<std::complex<double>> mpitest(Wavefield& src, double wvl, const Wavefield::FieldAxis& dst_xaxis,const Wavefield::FieldAxis& dst_zaxis){
+std::vector<std::complex<double>> mpitest(SWPL::Wavefield& src, double wvl, const SWPL::FieldAxis& dst_xaxis,const SWPL::FieldAxis& dst_zaxis){
 	const double xaxisPitch = dst_xaxis.Pitch();
 	const double xaxisFirst = dst_xaxis.front();
 	const double xaxisEnd = dst_xaxis.back();
@@ -107,7 +107,7 @@ int main(int argc, char* argv[]){
 	MPI_Comm_size(MPI_COMM_WORLD, &mpi_commSize);
 	MPI_Comm_rank(MPI_COMM_WORLD, &mpi_procRank);
 
-	Wavefield wf(xsize,xsize,xpitch,wvl);
+	SWPL::Wavefield wf(xsize,xsize,xpitch,wvl);
 	wf.setCircAparture(aptD);
 	std::chrono::system_clock::time_point start;
 	if(mpi_procRank==0){
@@ -157,7 +157,7 @@ int main(int argc, char* argv[]){
 		}
 	}else{
 		std::string foutpath = std::to_string(mpi_procRank)+std::string("th_obs.bin");
-		wf.saveCompDouble_bin(bs, foutpath);
+		SWPL::binWriteVCD(wf.getField(), foutpath);
 	}
 	MPI_Finalize();
 	return 0;

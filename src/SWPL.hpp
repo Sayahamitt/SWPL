@@ -13,7 +13,6 @@
 #include <Eigen/Core>
 
 namespace SWPL{
-
 	class FieldAxis:public std::vector<double>{
 		double pitch;
 	public:
@@ -125,6 +124,8 @@ namespace SWPL{
 		double wavelength() const{return wvl;}
 		void setWavelength(double wavelength){wvl = wavelength;}
 		std::vector<std::complex<double>> getField() const{return field;}
+		FieldAxis getXaxis() const{return xaxis;}
+		FieldAxis getYaxis() const{return yaxis;}
 	
 		void setCircAparture(double diamater,double centx=0, double centy=0){
 			double r = diamater/2;
@@ -231,55 +232,30 @@ namespace SWPL{
 			}
 			field = distwf;
 		}
-	
-		FieldAxis getXaxis() const{return xaxis;}
-		FieldAxis getYaxis() const{return yaxis;}
-	
-		void showWFcons(){
-			int ii=0;
-			std::for_each(field.begin(),field.end(),[&ii,this](std::complex<double> num){
-				std::cout<<num<<", "<<std::flush;
-				if((ii+1)%sizex()==0){
-					std::cout<<std::endl;
-				}ii++;
-			});
-		}
-	
-		void saveWfield_bin(std::string path){
-			std::ofstream fout;
-			fout.open(path.c_str(), std::ios::out|std::ios::binary|std::ios::trunc);
-			std::for_each(field.begin(),field.end(),[&fout](std::complex<double> num){
-				double r = std::real(num);
-				double i = std::imag(num);
-				fout.write((char *) &r,sizeof( double ) );
-				fout.write((char *) &i,sizeof( double ) );
-			});
-			fout.close();
-		}
-	
-		void saveCompDouble_bin(std::vector<std::complex<double>> vec,std::string path){
-			std::ofstream fout;
-			fout.open(path.c_str(), std::ios::out|std::ios::binary|std::ios::trunc);
-			std::for_each(vec.begin(),vec.end(),[&fout](std::complex<double> num){
-				double r = std::real(num);
-				double i = std::imag(num);
-				fout.write((char *) &r,sizeof( double ) );
-				fout.write((char *) &i,sizeof( double ) );
-			});
-			fout.close();
-		}
-	
-		void savevectord_bin(std::vector<double> vec,std::string path){
-			std::ofstream fout;
-			fout.open(path.c_str(), std::ios::out|std::ios::binary|std::ios::trunc);
-	
-			std::for_each(vec.begin(),vec.end(),[&fout](double num){
-				double r = num;
-				fout.write((char *) &r,sizeof( double ) );
-			});
-			fout.close();
-		}
 	};
+
+void binWrite(const char* data, const size_t elementSize, const size_t totalSize, std::string path){
+	std::ofstream fout;
+	fout.open(path.c_str(), std::ios::out|std::ios::binary|std::ios::trunc);
+
+	for(int ii=totalSize/elementSize;ii>0;ii--){
+		fout.write(data, elementSize);
+		data = data+elementSize;
+	}
+	fout.close();
+};
+
+void binWriteVCD(std::vector<std::complex<double>> vec,std::string path){
+	std::ofstream fout;
+	fout.open(path.c_str(), std::ios::out|std::ios::binary|std::ios::trunc);
+	std::for_each(vec.begin(),vec.end(),[&fout](std::complex<double> num){
+		double r = std::real(num);
+		double i = std::imag(num);
+		fout.write((char *) &r,sizeof( double ) );
+		fout.write((char *) &i,sizeof( double ) );
+	});
+	fout.close();
+}
 
 //static const メンバの初期化
 const std::complex<double> Wavefield::imunt = std::complex<double>(0,1);

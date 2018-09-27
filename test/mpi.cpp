@@ -6,7 +6,7 @@
 
 #include "../src/SWPL.hpp"
 
-void mpitest(Wavefield& src,const Wavefield::FieldAxis& dst_xaxis,const Wavefield::FieldAxis& dst_yaxis, double propz){
+void mpitest(SWPL::Wavefield& src,const SWPL::FieldAxis& dst_xaxis,const SWPL::FieldAxis& dst_yaxis, double propz){
 	const double xaxisPitch = dst_xaxis.Pitch();
 	const double xaxisFirst = dst_xaxis.front();
 	const double xaxisEnd = dst_xaxis.back();
@@ -38,7 +38,7 @@ void mpitest(Wavefield& src,const Wavefield::FieldAxis& dst_xaxis,const Wavefiel
 	}
 
 	//Wavefield::FieldAxis thAxis(dst_yaxis[startPos],dst_yaxis[endPos],dst_yaxis.Pitch());
-	Wavefield::FieldAxis thAxis(dst_yaxis[startPos],dst_yaxis.Pitch(),endPos-startPos+1);
+	SWPL::FieldAxis thAxis(dst_yaxis[startPos],dst_yaxis.Pitch(),endPos-startPos+1);
 	//std::cout<< "quotient: "<< quotient<< ", modulo: "<<modulo<< ", ThID:  " << mpi_procRank << ", srcStart: "<< dst_yaxis[startPos] << ", srcEnd: "<< dst_yaxis[endPos] << ", Num: "<< thAxis.size()<< std::endl;
 	//std::cout<< "quotient: "<< quotient<< ", modulo: "<<modulo<< ", ThID:  " << mpi_procRank << ", Start: "<< thAxis.front() << ", End: "<< thAxis.back() << ", Num: "<< thAxis.size()<< std::endl;
 	//std::cout<< "quotient: "<< quotient<< ", modulo: "<<modulo<< ", ThID:  " << mpi_procRank << ", StartPos: "<< startPos << ", endPos: "<< endPos << ", Num: "<< endPos-startPos+1<< std::endl;
@@ -81,7 +81,7 @@ int main(int argc, char* argv[]){
 	MPI_Comm_size(MPI_COMM_WORLD, &mpi_commSize);
 	MPI_Comm_rank(MPI_COMM_WORLD, &mpi_procRank);
 
-	Wavefield wf(xsize,ysize,pitch,wvl);
+	SWPL::Wavefield wf(xsize,ysize,pitch,wvl);
 	wf.setCircAparture(aptD);
 	std::chrono::system_clock::time_point start;
 	if(mpi_procRank==0){
@@ -128,7 +128,7 @@ int main(int argc, char* argv[]){
 		}
 	}else{
 		std::string foutpath = std::to_string(mpi_procRank)+std::string("th_obs.bin");
-		wf.saveWfield_bin(foutpath);
+		SWPL::binWriteVCD(wf.getField(), foutpath);
 	}
 	MPI_Finalize();
 	return 0;

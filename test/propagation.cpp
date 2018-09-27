@@ -6,18 +6,18 @@
 //#define SWPL_UNUSE_OPENMP
 #include "../src/SWPL.hpp"
 
-void offsetObsScr(Wavefield& srcwf, double propDist, double xoffset, double yoffset){
-	Wavefield::FieldAxis xaxis_dst = srcwf.getXaxis();
-	Wavefield::FieldAxis yaxis_dst = srcwf.getYaxis();
+void offsetObsScr(SWPL::Wavefield& srcwf, double propDist, double xoffset, double yoffset){
+	SWPL::FieldAxis xaxis_dst = srcwf.getXaxis();
+	SWPL::FieldAxis yaxis_dst = srcwf.getYaxis();
 	xaxis_dst.shift(xoffset);
 	yaxis_dst.shift(yoffset);
 
 	srcwf.RSprop(propDist, xaxis_dst, yaxis_dst);
 }
 
-void differntGridSpace(Wavefield& srcwf, double propDist, double gridRatio){
-	Wavefield::FieldAxis xaxis_dst = srcwf.getXaxis();
-	Wavefield::FieldAxis yaxis_dst = srcwf.getYaxis();
+void differntGridSpace(SWPL::Wavefield& srcwf, double propDist, double gridRatio){
+	SWPL::FieldAxis xaxis_dst = srcwf.getXaxis();
+	SWPL::FieldAxis yaxis_dst = srcwf.getYaxis();
 
 	xaxis_dst.scale(gridRatio);
 	yaxis_dst.scale(gridRatio);
@@ -25,9 +25,9 @@ void differntGridSpace(Wavefield& srcwf, double propDist, double gridRatio){
 	srcwf.RSprop(propDist, xaxis_dst, yaxis_dst);
 }
 
-void differntSizeObsScr(Wavefield& srcwf, double propDist, int dstsizeEx_x, int dstsizeEx_y){
-	Wavefield::FieldAxis xaxis_dst = srcwf.getXaxis();
-	Wavefield::FieldAxis yaxis_dst = srcwf.getYaxis();
+void differntSizeObsScr(SWPL::Wavefield& srcwf, double propDist, int dstsizeEx_x, int dstsizeEx_y){
+	SWPL::FieldAxis xaxis_dst = srcwf.getXaxis();
+	SWPL::FieldAxis yaxis_dst = srcwf.getYaxis();
 
 	xaxis_dst.extend_front(dstsizeEx_x/2);
 	xaxis_dst.extend_back(dstsizeEx_x/2);
@@ -37,15 +37,15 @@ void differntSizeObsScr(Wavefield& srcwf, double propDist, int dstsizeEx_x, int 
 	srcwf.RSprop(propDist, xaxis_dst, yaxis_dst);
 }
 
-void differntAxis(Wavefield& srcwf, double propDist){
+void differntAxis(SWPL::Wavefield& srcwf, double propDist){
 	double xf = srcwf.getXaxis().front()/2;
 	double xb = srcwf.getXaxis().back()/2;
 	double yf = srcwf.getYaxis().front()/1;
 	double yb = srcwf.getYaxis().back()/1;
 
-	Wavefield::FieldAxis xaxis_dst(xf,xb,srcwf.getXaxis().Pitch());
+	SWPL::FieldAxis xaxis_dst(xf,xb,srcwf.getXaxis().Pitch());
 	//Wavefield::FieldAxis xaxis_dst = srcwf.getXaxis();
-	Wavefield::FieldAxis yaxis_dst(yf,yb,srcwf.getYaxis().Pitch());
+	SWPL::FieldAxis yaxis_dst(yf,yb,srcwf.getYaxis().Pitch());
 	//Wavefield::FieldAxis yaxis_dst = srcwf.getYaxis();
 	try{
 		srcwf.RSprop(propDist, xaxis_dst, yaxis_dst);
@@ -82,11 +82,9 @@ int RStest(int argc, char* argv[]){
 		std::cout<<"error in argument parsing"<<std::endl;
 	}
 	
-	Wavefield wf(xsize,ysize,pitch,wvl);
+	SWPL::Wavefield wf(xsize,ysize,pitch,wvl);
 	//wf.setCircAparture(1);
 	wf.setCircAparture(aptD);
-	//wf.showWFcons();
-	//wf.saveWfield_bin("source.bin");
 	std::chrono::system_clock::time_point start = std::chrono::system_clock::now(); 
 	try{
 		//wf.RSprop(propz);
@@ -102,7 +100,7 @@ int RStest(int argc, char* argv[]){
 	}
 	std::chrono::system_clock::time_point end = std::chrono::system_clock::now();
 	std::chrono::system_clock::duration calcdur = end-start;
-	wf.saveWfield_bin(ofpath);
+	SWPL::binWriteVCD(wf.getField(), ofpath);
 	std::cout<< "using eigen :" <<std::chrono::duration_cast<std::chrono::milliseconds>(calcdur).count() <<std::endl;
 	return 0;
 }
